@@ -1,0 +1,36 @@
+SELECT
+    ft.transaction_id,
+    ft.date,
+    kc.branch_id,
+    kc.branch_name,
+    kc.kota,
+    kc.provinsi,
+    ft.customer_name,
+    ft.product_id,
+    p.product_name,
+    p.price AS actual_price,
+    ft.discount_percentage,
+    p.price * (1 - ft.discount_percentage) AS nett_sales,
+    CASE
+        WHEN p.price * (1 - ft.discount_percentage) BETWEEN 0 AND 50000 THEN 0.1
+        WHEN p.price * (1 - ft.discount_percentage) BETWEEN 50001 AND 100000 THEN 0.15
+        WHEN p.price * (1 - ft.discount_percentage) BETWEEN 100001 AND 300000 THEN 0.2
+        WHEN p.price * (1 - ft.discount_percentage) BETWEEN 300001 AND 500000 THEN 0.25
+        ELSE 0.3
+    END AS persentase_gross_laba,
+    p.price * (1 - ft.discount_percentage) * 
+        CASE
+        WHEN p.price * (1 - ft.discount_percentage) BETWEEN 0 AND 50000 THEN 0.1
+        WHEN p.price * (1 - ft.discount_percentage) BETWEEN 50001 AND 100000 THEN 0.15
+        WHEN p.price * (1 - ft.discount_percentage) BETWEEN 100001 AND 300000 THEN 0.2
+        WHEN p.price * (1 - ft.discount_percentage) BETWEEN 300001 AND 500000 THEN 0.25
+        ELSE 0.3
+    END AS nett_profit,
+    ft.rating AS rating_transaksi,
+    kc.rating AS rating_cabang,
+    EXTRACT(YEAR FROM ft.date) AS tahun,
+    EXTRACT(MONTH FROM ft.date) AS bulan
+FROM
+    `isentropic-snow-446012-k7.kf_final_transactions.KF_Final_Transactions` AS ft
+LEFT JOIN `isentropic-snow-446012-k7.kf_kantor_cabang.KF_Kantor_Cabang` AS kc ON ft.branch_id = kc.branch_id
+LEFT JOIN `isentropic-snow-446012-k7.kf_product.KF_Product` AS p ON ft.product_id = p.product_id;
